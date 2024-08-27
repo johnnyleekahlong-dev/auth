@@ -52,7 +52,9 @@ export const login = async (
 
     await user?.save();
 
-    return res.status(200).json({
+    generateTokenAndSetCookie(res, user._id as string);
+
+    res.status(200).json({
       success: true,
       message: "Logged in successfully",
     });
@@ -65,4 +67,15 @@ export const logout = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {};
+) => {
+  res.clearCookie("token");
+  res.status(200).json({ success: true, message: "Logged out successfully" });
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  try {
+  } catch (error) {
+    console.error("Error in forgotPassword: ", error);
+  }
+};
