@@ -3,6 +3,7 @@ import User, { IUser } from "../models/User";
 import { generateTokenAndSetCookie, VerifyToken } from "../utils";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../nodemailer";
+import crypto from "crypto";
 
 export const register = async (
   req: Request,
@@ -33,7 +34,10 @@ export const register = async (
 
     generateTokenAndSetCookie(res, user._id as string);
 
-    sendEmail(email, "Account Verification", "verify", { verificationCode });
+    sendEmail(email, "Account Verification", "verify", {
+      username: name,
+      verificationCode,
+    });
 
     res.status(201).json({
       success: true,
@@ -87,7 +91,7 @@ export const login = async (
 
   try {
     const user = await User.findOne({ email });
-    const isPasswordValid = user?.comparePassword(password);
+    const isPasswordValid = await user?.comparePassword(password);
 
     if (!isPasswordValid) {
       return res
@@ -124,9 +128,61 @@ export const logout = async (
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
   try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiresAt = resetTokenExpiresAt;
+
+    console.log(resetToken);
+
+    sendEmail(user.email, "Forgot Password", "passwordReset", {
+      resetURL: `http://localhost:3000/password-reset/${resetToken}`,
+    });
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset link have been sent to your mailbox",
+    });
   } catch (error) {
     console.error("Error in forgotPassword: ", error);
   }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { resetToken } = req.params;
+  const { password } = req.body;
+
+  const user = await User.findOne({
+    resetPasswordToken: resetToken,
+    // resetTokenExpiresAt: { $gt: Date.now() },
+  });
+
+  console.log(user);
+
+  if (!user) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid password reset token" });
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpiresAt = undefined;
+  await user.save();
+
+  res.status(200).json({ success: true, message: "Password updated" });
 };
 
 export const verifyToken = async (req: Request, res: Response) => {

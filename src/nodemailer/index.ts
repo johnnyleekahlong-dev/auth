@@ -31,7 +31,7 @@ export const sendEmail = (
   context: any
 ) => {
   const mailOptions = {
-    from: process.env.MAIL_USERNAME,
+    from: `"Authentication System" <${process.env.MAIL_USERNAME}>`,
     to,
     subject,
     template,

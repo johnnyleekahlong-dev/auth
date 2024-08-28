@@ -8,8 +8,8 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   lastLogin: Date;
   isVerified: boolean;
-  resetPasswordToken: string;
-  resetPasswordExpiresAt: Date;
+  resetPasswordToken: string | undefined;
+  resetPasswordExpiresAt: number | undefined;
   verificationToken: string | undefined;
   verificationTokenExpiresAt: Date | undefined;
 }
