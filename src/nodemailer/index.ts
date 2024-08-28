@@ -40,9 +40,9 @@ export const sendEmail = (
 
   transporter.sendMail(mailOptions, function (err, info) {
     if (err) {
-      console.log("Error: ", err);
+      console.log("Nodemailer Error: ", err);
     } else {
-      console.log("Message sent successfully!");
+      console.log("Email sent successfully!");
     }
   });
 };

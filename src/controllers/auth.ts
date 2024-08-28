@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "../models/User";
-import { generateTokenAndSetCookie } from "../utils";
+import { generateTokenAndSetCookie, VerifyToken } from "../utils";
+import jwt from "jsonwebtoken";
+import { sendEmail } from "../nodemailer";
 
 export const register = async (
   req: Request,
@@ -15,10 +17,23 @@ export const register = async (
       return res.status(400).json({ msg: "User already exists" });
     }
 
-    user = new User({ name, email, password });
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    user = new User({
+      name,
+      email,
+      password,
+      verificationToken: verificationCode,
+      verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    });
+
     await user.save();
 
     generateTokenAndSetCookie(res, user._id as string);
+
+    sendEmail(email, "Account Verification", "verify", { verificationCode });
 
     res.status(201).json({
       success: true,
@@ -26,6 +41,40 @@ export const register = async (
     });
   } catch (error: any) {
     console.error(error.message);
+  }
+};
+
+export const verifyAccount = async (req: Request, res: Response) => {
+  const { code } = req.body;
+  try {
+    const user = await User.findOne({
+      verificationToken: code,
+      verificationTokenExpiresAt: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification code",
+      });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiresAt = undefined;
+    await user.save();
+
+    sendEmail(user.email, "Welcome Onboard", "welcome", {
+      username: user.name,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Account verified successfully",
+    });
+  } catch (error) {
+    console.log("Error in verifyAccount ", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -78,4 +127,42 @@ export const forgotPassword = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error in forgotPassword: ", error);
   }
+};
+
+export const verifyToken = async (req: Request, res: Response) => {
+  const { token } = req.body;
+
+  if (!token)
+    return res
+      .status(400)
+      .json({ success: false, message: "Token is required" });
+
+  try {
+    const decoded: any = jwt.verify(token.value, process.env.JWT_SECRET!!);
+    const user = await User.findById(decoded.userId);
+
+    if (user?.isVerified) {
+      res.status(200).json({ success: true, user: decoded });
+    } else {
+      res
+        .status(200)
+        .json({ success: false, message: " User is not verified" });
+    }
+  } catch (error: any) {
+    console.error(error.message);
+    return;
+  }
+};
+
+export const getMe = async (req: Request, res: Response) => {
+  VerifyToken(req, res, (result) => {
+    if (!result.success) {
+      return res
+        .status(result.message === "Token is required" ? 400 : 403)
+        .json({ success: false, message: result.message });
+    }
+
+    // Respond with the user data if everything is fine
+    res.status(200).json({ success: true, user: result.user });
+  });
 };

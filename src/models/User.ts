@@ -10,8 +10,8 @@ export interface IUser extends Document {
   isVerified: boolean;
   resetPasswordToken: string;
   resetPasswordExpiresAt: Date;
-  verificationToken: string;
-  verificationTokenExpiresAt: Date;
+  verificationToken: string | undefined;
+  verificationTokenExpiresAt: Date | undefined;
 }
 
 const userSchema = new mongoose.Schema<IUser>(

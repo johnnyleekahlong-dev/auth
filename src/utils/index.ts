@@ -1,5 +1,6 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import jwt from "jsonwebtoken";
+import User from "../models/User";
 
 export const generateTokenAndSetCookie = (res: Response, userId: string) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET!!, {
@@ -14,4 +15,38 @@ export const generateTokenAndSetCookie = (res: Response, userId: string) => {
   });
 
   return token;
+};
+
+// Modify verifyToken to accept a callback
+export const VerifyToken = async (
+  req: Request,
+  res: Response,
+  callback: (result: { success: boolean; user?: any; message?: string }) => void
+) => {
+  const token = req.body.token || req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    callback({ success: false, message: "Token is required" });
+    return;
+  }
+
+  try {
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!!);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      callback({ success: false, message: "User not found" });
+      return;
+    }
+
+    if (!user.isVerified) {
+      callback({ success: false, message: "User is not verified" });
+      return;
+    }
+
+    callback({ success: true, user });
+  } catch (error: any) {
+    console.error("Error verifying token:", error.message);
+    callback({ success: false, message: "Invalid token" });
+  }
 };
