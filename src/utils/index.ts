@@ -1,6 +1,10 @@
 import { Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
+import IORedis from "ioredis";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const generateTokenAndSetCookie = (res: Response, userId: string) => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET!!, {
@@ -50,3 +54,10 @@ export const VerifyToken = async (
     callback({ success: false, message: "Invalid token" });
   }
 };
+
+// redisClient.ts
+
+// Create and configure the Redis client
+export const redisClient = new IORedis(
+  process.env.REDIS_URL ?? "redis://localhost:6379"
+);

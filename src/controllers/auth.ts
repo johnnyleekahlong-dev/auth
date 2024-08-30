@@ -4,6 +4,14 @@ import { generateTokenAndSetCookie, VerifyToken } from "../utils";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../nodemailer";
 import crypto from "crypto";
+import { redisClient } from "../utils";
+
+// Extend SessionData directly in the file
+declare module "express-session" {
+  interface SessionData {
+    userId?: string;
+  }
+}
 
 export const register = async (
   req: Request,
@@ -105,7 +113,23 @@ export const login = async (
 
     await user?.save();
 
-    generateTokenAndSetCookie(res, user._id as string);
+    // req.session.userId = user._id?.toString();
+    req.session.userId = user._id?.toString();
+
+    const sessionId = req.sessionID;
+
+    console.log({ session: req.session });
+    console.log({ sessionId });
+
+    const sessionKey = `sess:${sessionId}`;
+
+    const sessionData = await redisClient.get(sessionKey);
+
+    console.log({
+      sessionData: JSON.parse(sessionData!!),
+    });
+
+    // generateTokenAndSetCookie(res, user._id as string);
 
     res.status(200).json({
       success: true,
@@ -121,8 +145,23 @@ export const logout = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.clearCookie("token");
-  res.status(200).json({ success: true, message: "Logged out successfully" });
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Error logging out" });
+    }
+
+    // Clear the session cookie
+    res.clearCookie("connect.sid", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    // Respond to the client
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+  });
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
