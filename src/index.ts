@@ -26,21 +26,28 @@ app.use(
     saveUninitialized: false, // not saving if there's no changes in session
   })
 );
-const allowedOrigins = [
-  'http://localhost:3000',
-  process.env.CORS_ALLOWED_ORIGIN,
-];
+// const allowedOrigins = [
+//   'http://localhost:3000',
+//   process.env.CORS_ALLOWED_ORIGIN,
+// ];
+
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (allowedOrigins.includes(origin) || !origin) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error('Not allowed by CORS'));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (allowedOrigins.includes(origin) || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
+    origin: true, // Allows all origins
+    credentials: true, // Allows credentials (cookies, authorization headers, etc.)
   })
 );
 
