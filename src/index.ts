@@ -59,3 +59,5 @@ app.listen(port, async () => {
   await dbConnect(process.env.MONGODB_URI!!);
   console.log(`Auth server is running on port: ${port}`);
 });
+
+export default app;

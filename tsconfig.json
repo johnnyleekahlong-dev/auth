@@ -12,6 +12,6 @@
     },
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "src/types/**/*"],
+  "include": ["src/**/*", "src/types/**/*", "./api/*.ts"],
   "exclude": ["node_modules"]
 }
