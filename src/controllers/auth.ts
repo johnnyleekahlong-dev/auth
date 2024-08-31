@@ -1,15 +1,16 @@
-import { Request, Response, NextFunction } from "express";
-import User, { IUser } from "../models/User";
-import { generateTokenAndSetCookie, VerifyToken } from "../utils";
-import jwt from "jsonwebtoken";
-import { sendEmail } from "../nodemailer";
-import crypto from "crypto";
-import { redisClient } from "../utils";
+import { Request, Response, NextFunction } from 'express';
+import User from '../models/User';
+import { sendEmail } from '../nodemailer';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Extend SessionData directly in the file
-declare module "express-session" {
+declare module 'express-session' {
   interface SessionData {
     userId?: string;
+    isAuth: boolean;
   }
 }
 
@@ -23,7 +24,7 @@ export const register = async (
   try {
     let user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({ msg: "User already exists" });
+      return res.status(400).json({ msg: 'User already exists' });
     }
 
     const verificationCode = Math.floor(
@@ -40,16 +41,14 @@ export const register = async (
 
     await user.save();
 
-    generateTokenAndSetCookie(res, user._id as string);
-
-    sendEmail(email, "Account Verification", "verify", {
-      username: name,
+    sendEmail(email, 'Account Verification', 'verify', {
+      username: name.toUpperCase(),
       verificationCode,
     });
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: 'User created successfully',
     });
   } catch (error: any) {
     console.error(error.message);
@@ -67,7 +66,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or expired verification code",
+        message: 'Invalid or expired verification code',
       });
     }
 
@@ -76,17 +75,17 @@ export const verifyAccount = async (req: Request, res: Response) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    sendEmail(user.email, "Welcome Onboard", "welcome", {
+    sendEmail(user.email, 'Welcome Onboard', 'welcome', {
       username: user.name,
     });
 
     res.status(200).json({
       success: true,
-      message: "Account verified successfully",
+      message: 'Account verified successfully',
     });
   } catch (error) {
-    console.log("Error in verifyAccount ", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.log('Error in verifyAccount ', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -104,36 +103,27 @@ export const login = async (
     if (!isPasswordValid) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+        .json({ success: false, message: 'Invalid credentials' });
     }
 
     if (!user) return;
+
+    if (!user.isVerified)
+      return res
+        .status(400)
+        .json({ sucesss: false, message: 'Account verification required' });
 
     user.lastLogin = new Date();
 
     await user?.save();
 
-    // req.session.userId = user._id?.toString();
+    const sessionId = req.session.id;
+    req.session.isAuth = true;
     req.session.userId = user._id?.toString();
-
-    const sessionId = req.sessionID;
-
-    console.log({ session: req.session });
-    console.log({ sessionId });
-
-    const sessionKey = `sess:${sessionId}`;
-
-    const sessionData = await redisClient.get(sessionKey);
-
-    console.log({
-      sessionData: JSON.parse(sessionData!!),
-    });
-
-    // generateTokenAndSetCookie(res, user._id as string);
 
     res.status(200).json({
       success: true,
-      message: "Logged in successfully",
+      message: 'Logged in successfully',
     });
   } catch (error: any) {
     console.error(error.message);
@@ -147,20 +137,20 @@ export const logout = async (
 ) => {
   req.session.destroy((err) => {
     if (err) {
-      console.error("Error destroying session:", err);
+      console.error('Error destroying session:', err);
       return res
         .status(500)
-        .json({ success: false, message: "Error logging out" });
+        .json({ success: false, message: 'Error logging out' });
     }
 
     // Clear the session cookie
-    res.clearCookie("connect.sid", {
+    res.clearCookie('connect.sid', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === 'production',
     });
 
     // Respond to the client
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
   });
 };
 
@@ -172,30 +162,32 @@ export const forgotPassword = async (req: Request, res: Response) => {
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: 'User not found' });
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    const resetTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hr
 
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiresAt = resetTokenExpiresAt;
 
-    console.log(resetToken);
-
-    sendEmail(user.email, "Forgot Password", "passwordReset", {
-      resetURL: `http://localhost:3000/password-reset/${resetToken}`,
+    sendEmail(user.email, 'Forgot Password', 'passwordReset', {
+      username: user.name,
+      resetURL: `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`,
     });
+
+    console.log(`http://localhost:9000/auth/reset-password/${resetToken}`);
 
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Password reset link have been sent to your mailbox",
+      message: 'Password reset link have been sent to your mailbox',
     });
   } catch (error) {
-    console.error("Error in forgotPassword: ", error);
+    console.error('Error in forgotPassword: ', error);
   }
 };
 
@@ -205,59 +197,33 @@ export const resetPassword = async (req: Request, res: Response) => {
 
   const user = await User.findOne({
     resetPasswordToken: resetToken,
-    // resetTokenExpiresAt: { $gt: Date.now() },
   });
-
-  console.log(user);
 
   if (!user) {
     return res
       .status(400)
-      .json({ success: false, message: "Invalid password reset token" });
+      .json({ success: false, message: 'Invalid password reset token' });
   }
 
-  user.password = password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpiresAt = undefined;
-  await user.save();
-
-  res.status(200).json({ success: true, message: "Password updated" });
-};
-
-export const verifyToken = async (req: Request, res: Response) => {
-  const { token } = req.body;
-
-  if (!token)
+  if (
+    user &&
+    user.resetPasswordExpiresAt &&
+    user.resetPasswordExpiresAt > new Date()
+  ) {
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    await user.save();
+    res.status(200).json({ success: true, message: 'Password updated' });
+  } else {
     return res
       .status(400)
-      .json({ success: false, message: "Token is required" });
-
-  try {
-    const decoded: any = jwt.verify(token.value, process.env.JWT_SECRET!!);
-    const user = await User.findById(decoded.userId);
-
-    if (user?.isVerified) {
-      res.status(200).json({ success: true, user: decoded });
-    } else {
-      res
-        .status(200)
-        .json({ success: false, message: " User is not verified" });
-    }
-  } catch (error: any) {
-    console.error(error.message);
-    return;
+      .json({ success: false, message: 'Invalid password reset token' });
   }
 };
 
 export const getMe = async (req: Request, res: Response) => {
-  VerifyToken(req, res, (result) => {
-    if (!result.success) {
-      return res
-        .status(result.message === "Token is required" ? 400 : 403)
-        .json({ success: false, message: result.message });
-    }
+  const user = await User.findById(req.session.userId);
 
-    // Respond with the user data if everything is fine
-    res.status(200).json({ success: true, user: result.user });
-  });
+  res.status(200).json({ success: true, user });
 };

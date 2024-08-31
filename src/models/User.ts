@@ -9,7 +9,7 @@ export interface IUser extends Document {
   lastLogin: Date;
   isVerified: boolean;
   resetPasswordToken: string | undefined;
-  resetPasswordExpiresAt: number | undefined;
+  resetPasswordExpiresAt: Date | undefined;
   verificationToken: string | undefined;
   verificationTokenExpiresAt: Date | undefined;
 }

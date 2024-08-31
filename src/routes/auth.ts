@@ -3,22 +3,21 @@ import {
   register,
   login,
   logout,
-  verifyToken,
   verifyAccount,
   getMe,
   resetPassword,
   forgotPassword,
 } from "../controllers/auth";
+import { isAuth } from "../middlewares/isAuth";
 
 const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
-router.post("/verify-token", verifyToken);
 router.post("/verify-account", verifyAccount);
-router.post("/get-me", getMe);
+router.get("/get-me", isAuth, getMe);
 router.post("/forgot-password", forgotPassword);
-router.post("/password-reset/:resetToken", resetPassword);
+router.post("/reset-password/:resetToken", resetPassword);
 
 export default router;
