@@ -53,6 +53,12 @@ app.use(
 
 app.use(express.json());
 // app.use(cookieParser());
+
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Hello World',
+  });
+});
 app.use('/auth', auth);
 
 app.listen(port, async () => {
