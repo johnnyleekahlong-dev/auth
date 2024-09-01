@@ -41,10 +41,17 @@ export const register = async (
 
     await user.save();
 
-    sendEmail(email, 'Account Verification', 'verify', {
-      username: name.toUpperCase(),
-      verificationCode,
-    });
+    // const resp = sendEmail(email, 'Account Verification', 'verify', {
+    //   username: name.toUpperCase(),
+    //   verificationCode,
+    // });
+
+    await sendEmail(
+      email,
+      'Account Verification',
+      'This is the plain text content.',
+      `<h1>Hello ${user.name}</h1><p>This is your verification code: ${verificationCode}.</p>`
+    );
 
     res.status(201).json({
       success: true,
@@ -75,9 +82,9 @@ export const verifyAccount = async (req: Request, res: Response) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    sendEmail(user.email, 'Welcome Onboard', 'welcome', {
-      username: user.name,
-    });
+    // sendEmail(user.email, 'Welcome Onboard', 'welcome', {
+    //   username: user.name,
+    // });
 
     res.status(200).json({
       success: true,
@@ -173,10 +180,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiresAt = resetTokenExpiresAt;
 
-    sendEmail(user.email, 'Forgot Password', 'passwordReset', {
-      username: user.name,
-      resetURL: `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`,
-    });
+    // sendEmail(user.email, 'Forgot Password', 'passwordReset', {
+    //   username: user.name,
+    //   resetURL: `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`,
+    // });
 
     console.log(`http://localhost:9000/auth/reset-password/${resetToken}`);
 
