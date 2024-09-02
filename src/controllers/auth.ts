@@ -3,6 +3,11 @@ import User from '../models/User';
 import { sendEmail } from '../nodemailer';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import {
+  verify,
+  welcome,
+  resetPassword as reset,
+} from '../nodemailer/template';
 
 dotenv.config();
 
@@ -41,16 +46,11 @@ export const register = async (
 
     await user.save();
 
-    // const resp = sendEmail(email, 'Account Verification', 'verify', {
-    //   username: name.toUpperCase(),
-    //   verificationCode,
-    // });
-
     await sendEmail(
       email,
       'Account Verification',
       'This is the plain text content.',
-      `<h1>Hello ${user.name}</h1><p>This is your verification code: ${verificationCode}.</p>`
+      verify(user.name, verificationCode)
     );
 
     res.status(201).json({
@@ -82,9 +82,12 @@ export const verifyAccount = async (req: Request, res: Response) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    // sendEmail(user.email, 'Welcome Onboard', 'welcome', {
-    //   username: user.name,
-    // });
+    await sendEmail(
+      user.email,
+      'Welcome Onboard',
+      'This is the plain text content.',
+      welcome(user.name)
+    );
 
     res.status(200).json({
       success: true,
@@ -180,12 +183,15 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiresAt = resetTokenExpiresAt;
 
-    // sendEmail(user.email, 'Forgot Password', 'passwordReset', {
-    //   username: user.name,
-    //   resetURL: `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`,
-    // });
-
-    console.log(`http://localhost:9000/auth/reset-password/${resetToken}`);
+    await sendEmail(
+      user.email,
+      'Password Reset',
+      'This is the plain text content.',
+      reset(
+        user.name,
+        `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`
+      )
+    );
 
     await user.save();
 

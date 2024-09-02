@@ -13,6 +13,7 @@ const transporter = nodemailer.createTransport({
   },
   secure: true,
 });
+
 // const transporter = nodemailer.createTransport({
 //   service: process.env.MAIL_HOST,
 //   auth: {
