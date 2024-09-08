@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 
 dotenv.config();
 dbConnect(process.env.MONGODB_URI!!);
+console.log({ NODE_ENV: process.env.NODE_ENV });
 
 const app = express();
 const port = process.env.PORT;
