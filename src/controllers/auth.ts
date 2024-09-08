@@ -11,7 +11,6 @@ import {
 
 dotenv.config();
 
-// Extend SessionData directly in the file
 declare module 'express-session' {
   interface SessionData {
     userId?: string;
@@ -46,12 +45,16 @@ export const register = async (
 
     await user.save();
 
-    await sendEmail(
-      email,
-      'Account Verification',
-      'This is the plain text content.',
-      verify(user.name, verificationCode)
-    );
+    if (process.env.NODE_ENV !== 'development') {
+      await sendEmail(
+        email,
+        'Account Verification',
+        'This is the plain text content.',
+        verify(user.name, verificationCode)
+      );
+    } else {
+      console.log({ verificationCode });
+    }
 
     res.status(201).json({
       success: true,
@@ -82,12 +85,17 @@ export const verifyAccount = async (req: Request, res: Response) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    await sendEmail(
-      user.email,
-      'Welcome Onboard',
-      'This is the plain text content.',
-      welcome(user.name)
-    );
+    if (process.env.NODE_ENV !== 'development') {
+      await sendEmail(
+        user.email,
+        'Welcome Onboard',
+        'This is the plain text content.',
+        welcome(user.name)
+      );
+    }
+
+    req.session.isAuth = true;
+    req.session.userId = user._id?.toString();
 
     res.status(200).json({
       success: true,
@@ -183,15 +191,21 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiresAt = resetTokenExpiresAt;
 
-    await sendEmail(
-      user.email,
-      'Password Reset',
-      'This is the plain text content.',
-      reset(
-        user.name,
-        `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`
-      )
-    );
+    if (process.env.NODE_ENV !== 'development') {
+      await sendEmail(
+        user.email,
+        'Password Reset',
+        'This is the plain text content.',
+        reset(
+          user.name,
+          `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`
+        )
+      );
+    } else {
+      console.log({
+        resetLink: `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`,
+      });
+    }
 
     await user.save();
 

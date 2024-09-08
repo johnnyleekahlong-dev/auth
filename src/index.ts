@@ -6,6 +6,7 @@ import cors from 'cors';
 import session from 'express-session';
 import connectMongoDBSession from 'connect-mongodb-session';
 import { register } from './controllers/auth';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 dbConnect(process.env.MONGODB_URI!!);
@@ -19,37 +20,36 @@ const store = new MongoDBStore({
 });
 
 const corsConfig = {
-  origin: '*',
+  origin: 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
+app.set('trust proxy', 1); // trust first proxy
 app.options('', cors(corsConfig));
 app.use(cors(corsConfig));
-
+app.use(express.json());
+app.use(cookieParser());
 app.use(
   session({
-    store,
     secret: process.env.SESSION_SECRET!!,
-    resave: false, // for every request to server to create a new session even the same user set to false
-    saveUninitialized: false, // not saving if there's no changes in session
+    resave: false,
+    saveUninitialized: false,
+    store,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production' ? true : false, // Set to true if using HTTPS
+      maxAge: 3600000, // 1 hour
+      sameSite: false,
+      path: '/',
+    },
   })
 );
-
-app.use(express.json());
-// app.use(cookieParser());
-
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello World',
+    message: 'Authentication System',
   });
 });
-app.get('/register', (req, res) => {
-  res.json({ message: 'register' });
-});
-app.post('/register', register);
 app.use('/auth', auth);
-
 app.listen(port, async () => {
   console.log(`Auth server is running on port: ${port}`);
 });
