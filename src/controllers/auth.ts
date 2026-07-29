@@ -114,7 +114,7 @@ export const login = async (
   next: NextFunction,
 ) => {
   const { email, password, remember } = req.body;
-
+  console.log('remember received:', remember, typeof remember);
   try {
     const user = await User.findOne({ email });
     const isPasswordValid = await user?.comparePassword(password);
