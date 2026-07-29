@@ -8,6 +8,7 @@ import {
   welcome,
   resetPassword as reset,
 } from '../nodemailer/template';
+import { createSession } from '../utils/session';
 
 dotenv.config();
 
@@ -56,12 +57,13 @@ export const register = async (
       console.log({ verificationCode });
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'User created successfully',
     });
   } catch (error: any) {
     console.error(error.message);
+    return res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
@@ -94,16 +96,19 @@ export const verifyAccount = async (req: Request, res: Response) => {
       );
     }
 
-    req.session.isAuth = true;
-    req.session.userId = user._id?.toString();
+    await createSession(req, {
+      _id: user._id!.toString(),
+      email: user.email,
+      name: user.name,
+    });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Account verified successfully',
     });
   } catch (error) {
     console.log('Error in verifyAccount ', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -137,37 +142,26 @@ export const login = async (
 
     await user?.save();
 
-    const sessionId = req.session.id;
-    req.session.isAuth = true;
-    req.session.userId = user._id?.toString();
+    await createSession(req, {
+      _id: user._id!.toString(),
+      email: user.email,
+      name: user.name,
+    });
 
-    req.session.save((err) => {
-      if (err) {
-        console.error('Session save failed:', err);
-
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to create session',
-        });
-      }
-
-      // console.log('Session saved:', req.session);
-
-      return res.status(200).json({
-        success: true,
-        message: 'Logged in successfully',
-      });
+    return res.status(200).json({
+      success: true,
+      message: 'Logged in successfully',
     });
   } catch (error: any) {
     console.error(error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Server Error',
+    });
   }
 };
 
-export const logout = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const logout = (req: Request, res: Response, next: NextFunction) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Error destroying session:', err);
@@ -180,10 +174,14 @@ export const logout = async (
     res.clearCookie('connect.sid', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      path: '/',
     });
 
     // Respond to the client
-    res.status(200).json({ success: true, message: 'Logged out successfully' });
+    return res
+      .status(200)
+      .json({ success: true, message: 'Logged out successfully' });
   });
 };
 
@@ -224,12 +222,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Password reset link have been sent to your mailbox',
     });
   } catch (error) {
     console.error('Error in forgotPassword: ', error);
+    return res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
@@ -256,7 +255,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiresAt = undefined;
     await user.save();
-    res.status(200).json({ success: true, message: 'Password updated' });
+    return res.status(200).json({ success: true, message: 'Password updated' });
   } else {
     return res
       .status(400)
@@ -266,7 +265,9 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const getMe = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.session.userId);
+    const user = await User.findById(req.session.userId).select(
+      '_id name email role',
+    );
     if (user) {
       res.status(200).json({ success: true, user });
       return;
@@ -278,6 +279,7 @@ export const getMe = async (req: Request, res: Response) => {
       return;
     }
   } catch (error: any) {
-    res.status(500).json({ success: false, error_message: error.message });
+    console.error(error.message);
+    return res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
