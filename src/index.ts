@@ -5,12 +5,10 @@ import auth from './routes';
 import cors from 'cors';
 import session from 'express-session';
 import connectMongoDBSession from 'connect-mongodb-session';
-import { register } from './controllers/auth';
 import cookieParser from 'cookie-parser';
 
 dotenv.config();
 dbConnect(process.env.MONGODB_URI!!);
-console.log({ NODE_ENV: process.env.NODE_ENV });
 
 const app = express();
 const port = process.env.PORT;
