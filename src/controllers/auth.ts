@@ -21,7 +21,7 @@ declare module 'express-session' {
 export const register = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { name, email, password } = req.body;
 
@@ -32,7 +32,7 @@ export const register = async (
     }
 
     const verificationCode = Math.floor(
-      100000 + Math.random() * 900000
+      100000 + Math.random() * 900000,
     ).toString();
 
     user = new User({
@@ -50,7 +50,7 @@ export const register = async (
         email,
         'Account Verification',
         'This is the plain text content.',
-        verify(user.name, verificationCode)
+        verify(user.name, verificationCode),
       );
     } else {
       console.log({ verificationCode });
@@ -90,7 +90,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
         user.email,
         'Welcome Onboard',
         'This is the plain text content.',
-        welcome(user.name)
+        welcome(user.name),
       );
     }
 
@@ -110,9 +110,11 @@ export const verifyAccount = async (req: Request, res: Response) => {
 export const login = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { email, password } = req.body;
+
+  console.log({ credentials: { email, password } });
 
   try {
     const user = await User.findOne({ email });
@@ -151,7 +153,7 @@ export const login = async (
 export const logout = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   req.session.destroy((err) => {
     if (err) {
@@ -198,8 +200,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
         'This is the plain text content.',
         reset(
           user.name,
-          `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`
-        )
+          `${process.env.FRONTEND_RESET_PASSWORD_LINK}/${resetToken}`,
+        ),
       );
     } else {
       console.log({
@@ -250,7 +252,21 @@ export const resetPassword = async (req: Request, res: Response) => {
 };
 
 export const getMe = async (req: Request, res: Response) => {
-  const user = await User.findById(req.session.userId);
-
-  res.status(200).json({ success: true, user });
+  try {
+    const user = await User.findById(req.session.userId);
+    if (user) {
+      res.status(200).json({ success: true, user });
+      return;
+    } else {
+      res
+        .status(200)
+        .json({
+          success: false,
+          error_message: 'No user found, please login.',
+        });
+      return;
+    }
+  } catch (error: any) {
+    res.status(200).json({ success: false, error_message: error.message });
+  }
 };
