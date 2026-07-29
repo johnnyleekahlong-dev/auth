@@ -12,13 +12,6 @@ import { createSession } from '../utils/session';
 
 dotenv.config();
 
-declare module 'express-session' {
-  interface SessionData {
-    userId?: string;
-    isAuth: boolean;
-  }
-}
-
 export const register = async (
   req: Request,
   res: Response,
@@ -51,7 +44,10 @@ export const register = async (
         email,
         'Account Verification',
         'This is the plain text content.',
-        verify(user.name, verificationCode),
+        verify(
+          user.name,
+          `${process.env.HOST}/auth/verify-account/${verificationCode}`,
+        ),
       );
     } else {
       console.log({ verificationCode });
@@ -68,10 +64,10 @@ export const register = async (
 };
 
 export const verifyAccount = async (req: Request, res: Response) => {
-  const { code } = req.body;
+  const { verificationCode } = req.params;
   try {
     const user = await User.findOne({
-      verificationToken: code,
+      verificationToken: verificationCode,
       verificationTokenExpiresAt: { $gt: Date.now() },
     });
 

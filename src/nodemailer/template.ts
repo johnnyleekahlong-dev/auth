@@ -29,19 +29,57 @@ ${contentWrapper(`
   <p>If you didn't create an account with us, please ignore this email.</p>
 `)}`;
 
-export const verify = (username: string, verificationCode: string) => `
+// export const verify = (username: string, verificationCode: string) => `
+// ${title('Verify Your Email')}
+// ${contentWrapper(`
+//   <p>Hello ${username}</p>
+//   <p>Thank you for signing up! Your verification code is:</p>
+//   <div style="text-align: center; margin: 30px 0;">
+//     <span
+//       style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4CAF50;"
+//     >${verificationCode}</span>
+//   </div>
+//   <p>Enter this code on the verification page to complete your registration.</p>
+//   <p>This code will expire in 24 hours for security reasons.</p>
+//   <p>If you didn't create an account with us, please ignore this email.</p>
+// `)}`;
+
+export const verify = (username: string, verificationUrl: string) => `
 ${title('Verify Your Email')}
 ${contentWrapper(`
-  <p>Hello ${username}</p>
-  <p>Thank you for signing up! Your verification code is:</p>
-  <div style="text-align: center; margin: 30px 0;">
-    <span
-      style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #4CAF50;"
-    >${verificationCode}</span>
+  <p>Hello ${username},</p>
+
+  <p>Thank you for signing up! Please click the button below to verify your email address.</p>
+
+  <div style="text-align: center; margin: 32px 0;">
+    <a
+      href="${verificationUrl}"
+      style="
+        display: inline-block;
+        background-color: #4CAF50;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+      "
+    >
+      Verify Email
+    </a>
   </div>
-  <p>Enter this code on the verification page to complete your registration.</p>
-  <p>This code will expire in 24 hours for security reasons.</p>
-  <p>If you didn't create an account with us, please ignore this email.</p>
+
+  <p>If the button doesn't work, copy and paste the following link into your browser:</p>
+
+  <p style="word-break: break-all;">
+    <a href="${verificationUrl}">
+      ${verificationUrl}
+    </a>
+  </p>
+
+  <p>This verification link will expire in 24 hours for security reasons.</p>
+
+  <p>If you didn't create an account with us, you can safely ignore this email.</p>
 `)}`;
 
 export const resetPassword = (username: string, resetURL: string) => `
