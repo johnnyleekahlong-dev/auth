@@ -265,7 +265,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const getMe = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.session.userId).select(
+    const user = await User.findById(req.session.user!.id).select(
       '_id name email role',
     );
     if (user) {
