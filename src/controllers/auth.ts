@@ -259,7 +259,7 @@ export const getMe = async (req: Request, res: Response) => {
       return;
     } else {
       res
-        .status(200)
+        .status(401)
         .json({
           success: false,
           error_message: 'No user found, please login.',
@@ -267,6 +267,6 @@ export const getMe = async (req: Request, res: Response) => {
       return;
     }
   } catch (error: any) {
-    res.status(200).json({ success: false, error_message: error.message });
+    res.status(500).json({ success: false, error_message: error.message });
   }
 };
