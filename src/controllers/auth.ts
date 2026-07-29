@@ -113,9 +113,7 @@ export const login = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { email, password } = req.body;
-
-  // console.log({ credentials: { email, password } });
+  const { email, password, remember } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -143,6 +141,10 @@ export const login = async (
       email: user.email,
       name: user.name,
     });
+
+    if (remember) {
+      req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
+    }
 
     return res.status(200).json({
       success: true,
