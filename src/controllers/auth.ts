@@ -114,7 +114,7 @@ export const login = async (
 ) => {
   const { email, password } = req.body;
 
-  console.log({ credentials: { email, password } });
+  // console.log({ credentials: { email, password } });
 
   try {
     const user = await User.findOne({ email });
@@ -141,9 +141,22 @@ export const login = async (
     req.session.isAuth = true;
     req.session.userId = user._id?.toString();
 
-    res.status(200).json({
-      success: true,
-      message: 'Logged in successfully',
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save failed:', err);
+
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to create session',
+        });
+      }
+
+      // console.log('Session saved:', req.session);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Logged in successfully',
+      });
     });
   } catch (error: any) {
     console.error(error.message);
@@ -258,12 +271,10 @@ export const getMe = async (req: Request, res: Response) => {
       res.status(200).json({ success: true, user });
       return;
     } else {
-      res
-        .status(401)
-        .json({
-          success: false,
-          error_message: 'No user found, please login.',
-        });
+      res.status(401).json({
+        success: false,
+        error_message: 'No user found, please login.',
+      });
       return;
     }
   } catch (error: any) {
