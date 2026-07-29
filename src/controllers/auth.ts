@@ -136,15 +136,15 @@ export const login = async (
 
     await user?.save();
 
-    await createSession(req, {
-      _id: user._id!.toString(),
-      email: user.email,
-      name: user.name,
-    });
-
-    if (remember) {
-      req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days
-    }
+    await createSession(
+      req,
+      {
+        _id: user._id!.toString(),
+        email: user.email,
+        name: user.name,
+      },
+      remember,
+    );
 
     return res.status(200).json({
       success: true,
