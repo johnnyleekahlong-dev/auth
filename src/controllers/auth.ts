@@ -126,7 +126,18 @@ export const login = async (
   next: NextFunction,
 ) => {
   const { email, password, remember } = req.body;
-  console.log('remember received:', remember, typeof remember);
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email is required.',
+    });
+  }
+
+  const key = `${req.ip}:${String(email || '')
+    .trim()
+    .toLowerCase()}`;
+
   try {
     const user = await User.findOne({ email });
     const isPasswordValid = await user?.comparePassword(password);
@@ -158,7 +169,7 @@ export const login = async (
       remember,
     );
 
-    loginLimiter.delete(req.ip!);
+    loginLimiter.delete(key);
 
     return res.status(200).json({
       success: true,

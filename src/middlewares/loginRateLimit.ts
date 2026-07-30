@@ -9,8 +9,18 @@ export async function loginRateLimit(
   next: NextFunction,
 ) {
   try {
-    const res = await loginLimiter.consume(req.ip!);
-    console.log({ res });
+    const email = String(req.body.email || '')
+      .trim()
+      .toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required.',
+      });
+    }
+    const key = `${req.ip}:${email}`;
+    await loginLimiter.consume(key);
     next();
   } catch {
     return res.status(429).json({

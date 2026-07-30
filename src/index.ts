@@ -57,6 +57,7 @@ app.get('/', (req, res) => {
     message: 'Authentication System',
   });
 });
+
 app.use('/auth', auth);
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, () => {
