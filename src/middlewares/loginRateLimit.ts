@@ -9,8 +9,8 @@ export async function loginRateLimit(
   next: NextFunction,
 ) {
   try {
-    await loginLimiter.consume(req.ip!);
-
+    const res = await loginLimiter.consume(req.ip!);
+    console.log({ res });
     next();
   } catch {
     return res.status(429).json({
