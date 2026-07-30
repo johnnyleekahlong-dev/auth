@@ -1,7 +1,7 @@
 import { Request } from 'express';
 
 interface SessionUser {
-  _id: string;
+  id: string;
   email: string;
   name: string;
 }
@@ -13,7 +13,7 @@ export const createSession = (
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     req.session.user = {
-      id: user._id.toString(),
+      id: user.id.toString(),
       email: user.email,
       name: user.name,
     };

@@ -39,7 +39,7 @@ export const register = async (
       name,
       email,
       password,
-      verificationToken: hashedCode,
+      verificationTokenHash: hashedCode,
       verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
@@ -105,7 +105,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
     }
 
     await createSession(req, {
-      _id: user._id!.toString(),
+      id: user._id!.toString(),
       email: user.email,
       name: user.name,
     });
@@ -151,7 +151,7 @@ export const login = async (
     await createSession(
       req,
       {
-        _id: user._id!.toString(),
+        id: user._id!.toString(),
         email: user.email,
         name: user.name,
       },

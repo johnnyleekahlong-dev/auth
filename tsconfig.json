@@ -8,7 +8,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "include": ["src/**/*", "src/types/**/*", "api/*.ts"],
   "exclude": ["node_modules"]
