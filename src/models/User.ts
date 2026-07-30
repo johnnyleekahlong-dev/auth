@@ -1,5 +1,5 @@
-import mongoose, { Document, Model } from "mongoose";
-import bcrypt from "bcryptjs";
+import mongoose, { Document, Model } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   name: string;
@@ -8,9 +8,9 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   lastLogin: Date;
   isVerified: boolean;
-  resetPasswordToken: string | undefined;
+  resetPasswordTokenHash: string | undefined;
   resetPasswordExpiresAt: Date | undefined;
-  verificationToken: string | undefined;
+  verificationTokenHash: string | undefined;
   verificationTokenExpiresAt: Date | undefined;
 }
 
@@ -31,18 +31,18 @@ const userSchema = new mongoose.Schema<IUser>(
       type: Boolean,
       default: false,
     },
-    resetPasswordToken: String,
+    resetPasswordTokenHash: String,
     resetPasswordExpiresAt: Date,
-    verificationToken: String,
+    verificationTokenHash: String,
     verificationTokenExpiresAt: Date,
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-userSchema.pre<IUser>("save", async function (next) {
-  if (!this.isModified("password")) {
+userSchema.pre<IUser>('save', async function (next) {
+  if (!this.isModified('password')) {
     return next();
   }
 
@@ -52,11 +52,11 @@ userSchema.pre<IUser>("save", async function (next) {
 });
 
 userSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  candidatePassword: string,
 ) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
+const User: Model<IUser> = mongoose.model<IUser>('User', userSchema);
 
 export default User;

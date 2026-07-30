@@ -29,11 +29,16 @@ export const register = async (
       100000 + Math.random() * 900000,
     ).toString();
 
+    const hashedCode = crypto
+      .createHash('sha256')
+      .update(verificationCode)
+      .digest('hex');
+
     user = new User({
       name,
       email,
       password,
-      verificationToken: verificationCode,
+      verificationToken: hashedCode,
       verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
@@ -65,9 +70,15 @@ export const register = async (
 
 export const verifyAccount = async (req: Request, res: Response) => {
   const { verificationCode } = req.params;
+
+  const hashedCode = crypto
+    .createHash('sha256')
+    .update(verificationCode)
+    .digest('hex');
+
   try {
     const user = await User.findOne({
-      verificationToken: verificationCode,
+      verificationToken: hashedCode,
       verificationTokenExpiresAt: { $gt: Date.now() },
     });
 
@@ -79,7 +90,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
     }
 
     user.isVerified = true;
-    user.verificationToken = undefined;
+    user.verificationTokenHash = undefined;
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
@@ -197,9 +208,14 @@ export const forgotPassword = async (req: Request, res: Response) => {
     // Generate reset token
     const resetToken = crypto.randomBytes(20).toString('hex');
 
+    const hashedResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
     const resetTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hr
 
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordTokenHash = hashedResetToken;
     user.resetPasswordExpiresAt = resetTokenExpiresAt;
 
     if (process.env.NODE_ENV !== 'development') {
@@ -234,8 +250,13 @@ export const resetPassword = async (req: Request, res: Response) => {
   const { resetToken } = req.params;
   const { password } = req.body;
 
+  const hashedResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
   const user = await User.findOne({
-    resetPasswordToken: resetToken,
+    resetPasswordTokenHash: hashedResetToken,
   });
 
   if (!user) {
@@ -250,7 +271,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.resetPasswordExpiresAt > new Date()
   ) {
     user.password = password;
-    user.resetPasswordToken = undefined;
+    user.resetPasswordTokenHash = undefined;
     user.resetPasswordExpiresAt = undefined;
     await user.save();
     return res.status(200).json({ success: true, message: 'Password updated' });
