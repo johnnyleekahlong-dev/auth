@@ -11,6 +11,14 @@ import { redisClient } from './utils/redis';
 dotenv.config();
 dbConnect(process.env.MONGODB_URI!!);
 
+async function initialize() {
+  if (!redisClient.isOpen) {
+    await redisClient.connect();
+  }
+}
+
+initialize().catch(console.error);
+
 const app = express();
 const port = process.env.PORT;
 const MongoDBStore = connectMongoDBSession(session);
@@ -50,13 +58,10 @@ app.get('/', (req, res) => {
   });
 });
 app.use('/auth', auth);
-app.listen(port, async () => {
-  try {
-    await redisClient.connect();
-  } catch (err: any) {
-    console.error(err.message);
-  }
-  console.log(`Auth server is running on port: ${port}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`Listening on ${port}`);
+  });
+}
 
 export default app;
