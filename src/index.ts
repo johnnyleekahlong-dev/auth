@@ -51,7 +51,11 @@ app.get('/', (req, res) => {
 });
 app.use('/auth', auth);
 app.listen(port, async () => {
-  await redisClient.connect();
+  try {
+    await redisClient.connect();
+  } catch (err: any) {
+    console.error(err.message);
+  }
   console.log(`Auth server is running on port: ${port}`);
 });
 
