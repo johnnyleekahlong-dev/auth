@@ -9,6 +9,7 @@ import {
   resetPassword as reset,
 } from '../nodemailer/template';
 import { createSession } from '../utils/session';
+import { loginLimiter } from '../utils/rateLimiter';
 
 dotenv.config();
 
@@ -156,6 +157,8 @@ export const login = async (
       },
       remember,
     );
+
+    loginLimiter.delete(req.ip!);
 
     return res.status(200).json({
       success: true,

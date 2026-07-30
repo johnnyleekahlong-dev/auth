@@ -9,11 +9,12 @@ import {
   forgotPassword,
 } from '../controllers/auth';
 import { isAuth } from '../middlewares/isAuth';
+import { loginRateLimit } from '../middlewares/loginRateLimit';
 
 const router = express.Router();
 
 router.post('/register', register);
-router.post('/login', login);
+router.post('/login', loginRateLimit, login);
 router.post('/logout', logout);
 router.get('/verify-account/:verificationCode', verifyAccount);
 router.get('/get-me', isAuth, getMe);

@@ -6,6 +6,7 @@ import cors from 'cors';
 import session from 'express-session';
 import connectMongoDBSession from 'connect-mongodb-session';
 import cookieParser from 'cookie-parser';
+import { redisClient } from './utils/redis';
 
 dotenv.config();
 dbConnect(process.env.MONGODB_URI!!);
@@ -50,6 +51,7 @@ app.get('/', (req, res) => {
 });
 app.use('/auth', auth);
 app.listen(port, async () => {
+  await redisClient.connect();
   console.log(`Auth server is running on port: ${port}`);
 });
 
