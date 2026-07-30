@@ -79,7 +79,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
 
   try {
     const user = await User.findOne({
-      verificationToken: hashedCode,
+      verificationTokenHash: hashedCode,
       verificationTokenExpiresAt: { $gt: Date.now() },
     });
 
