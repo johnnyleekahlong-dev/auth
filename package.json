@@ -38,15 +38,18 @@
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.6.1",
     "express-session": "^1.18.0",
     "i": "^0.3.7",
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "mailtrap": "^3.4.0",
+    "mongo-rate-limit-store": "^1.0.1",
     "mongoose": "^8.5.4",
     "nodemailer": "^6.9.14",
     "nodemailer-express-handlebars": "^6.1.2",
     "npm": "^10.8.3",
+    "rate-limit-mongo": "^2.3.2",
     "rate-limiter-flexible": "^11.2.0",
     "redis": "^4.7.1"
   }

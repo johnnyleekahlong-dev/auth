@@ -6,18 +6,19 @@ import cors from 'cors';
 import session from 'express-session';
 import connectMongoDBSession from 'connect-mongodb-session';
 import cookieParser from 'cookie-parser';
-import { redisClient } from './utils/redis';
+import { csrfProtection } from './middlewares/csrf';
+// import { redisClient } from './utils/redis';
 
 dotenv.config();
 dbConnect(process.env.MONGODB_URI!!);
 
-async function initialize() {
-  if (!redisClient.isOpen) {
-    await redisClient.connect();
-  }
-}
+// async function initialize() {
+//   if (!redisClient.isOpen) {
+//     await redisClient.connect();
+//   }
+// }
 
-initialize().catch(console.error);
+// initialize().catch(console.error);
 
 const app = express();
 const port = process.env.PORT;
@@ -52,6 +53,9 @@ app.use(
     },
   }),
 );
+
+app.use(csrfProtection);
+
 app.get('/', (req, res) => {
   res.json({
     message: 'Authentication System',

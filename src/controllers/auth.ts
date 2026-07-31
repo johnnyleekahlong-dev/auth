@@ -10,6 +10,7 @@ import {
 } from '../nodemailer/template';
 import { createSession } from '../utils/session';
 import { loginLimiter } from '../utils/rateLimiter';
+import { sendUserCreatedWebhook } from '../webhooks';
 
 dotenv.config();
 
@@ -95,6 +96,12 @@ export const verifyAccount = async (req: Request, res: Response) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
+    await sendUserCreatedWebhook({
+      authUserId: user._id!.toString(),
+      name: user.name,
+      email: user.email,
+    });
+
     if (process.env.NODE_ENV !== 'development') {
       await sendEmail(
         user.email,
@@ -104,8 +111,8 @@ export const verifyAccount = async (req: Request, res: Response) => {
       );
     }
 
-    await createSession(req, {
-      id: user._id!.toString(),
+    await createSession(req, res, {
+      _id: user._id!.toString(),
       email: user.email,
       name: user.name,
     });
@@ -134,12 +141,19 @@ export const login = async (
     });
   }
 
-  const key = `${req.ip}:${String(email || '')
-    .trim()
-    .toLowerCase()}`;
+  // const key = `${req.ip}:${String(email || '')
+  //   .trim()
+  //   .toLowerCase()}`;
 
   try {
     const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid credentials' });
+    }
+
     const isPasswordValid = await user?.comparePassword(password);
 
     if (!isPasswordValid) {
@@ -147,8 +161,6 @@ export const login = async (
         .status(400)
         .json({ success: false, message: 'Invalid credentials' });
     }
-
-    if (!user) return;
 
     if (!user.isVerified)
       return res
@@ -161,15 +173,16 @@ export const login = async (
 
     await createSession(
       req,
+      res,
       {
-        id: user._id!.toString(),
+        _id: user._id!.toString(),
         email: user.email,
         name: user.name,
       },
       remember,
     );
 
-    loginLimiter.delete(key);
+    // loginLimiter.delete(key);
 
     return res.status(200).json({
       success: true,
@@ -201,6 +214,15 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
       path: '/',
     });
 
+    // The CSRF cookie is a separate cookie from the session cookie — clear
+    // it too, or a stale token would linger client-side after logout.
+    res.clearCookie('csrf-token', {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+    });
+
     // Respond to the client
     return res
       .status(200)
@@ -214,9 +236,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'User not found' });
+      // Same response shape/status regardless of whether the account
+      // exists — this is intentional (prevents email enumeration), the
+      // frontend's "Reset link sent" screen already reflects this.
+      return res.status(200).json({
+        success: true,
+        message: 'Password reset link have been sent to your mailbox',
+      });
     }
 
     // Generate reset token
