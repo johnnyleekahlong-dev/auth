@@ -36,8 +36,7 @@
 // });
 
 import rateLimit from 'express-rate-limit';
-// import MongoStore from 'mongo-rate-limit-store';
-import MongoStore from '../lib/MongoStore';
+import MongoStore from 'mongo-rate-limit-store';
 
 // rate-limit-mongo (the more commonly-suggested package) implements the
 // OLD callback-based Store interface (incr/decrement/resetKey) and hasn't

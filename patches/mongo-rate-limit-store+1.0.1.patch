@@ -1,0 +1,13 @@
+diff --git a/node_modules/mongo-rate-limit-store/dist/mongoStore.js b/node_modules/mongo-rate-limit-store/dist/mongoStore.js
+index ccb4466..02bbebf 100644
+--- a/node_modules/mongo-rate-limit-store/dist/mongoStore.js
++++ b/node_modules/mongo-rate-limit-store/dist/mongoStore.js
+@@ -65,7 +65,7 @@ class MongoStore {
+         this.windowMs = options.windowMs;
+         this.client = this.createClient(this.uri, this.clientOptions);
+         this.client.connect();
+-        this._db = this.client.db('rateLimit');
++        this._db = this.client.db();
+         this._collection = this._db.collection(this.collectionName);
+         if (this.createTtlIndex) {
+             this._collection.createIndex({ resetTime: 1 }, { expireAfterSeconds: 0 });
