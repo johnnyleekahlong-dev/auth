@@ -36,7 +36,8 @@
 // });
 
 import rateLimit from 'express-rate-limit';
-import MongoStore from 'mongo-rate-limit-store';
+// import MongoStore from 'mongo-rate-limit-store';
+import MongoStore from '../lib/MongoStore';
 
 // rate-limit-mongo (the more commonly-suggested package) implements the
 // OLD callback-based Store interface (incr/decrement/resetKey) and hasn't
@@ -70,7 +71,7 @@ export const loginLimiter = rateLimit({
   },
   store: new MongoStore({
     uri: process.env.MONGODB_URI!,
-    collectionName: 'auth',
+    collectionName: 'rateLimits',
     prefix: 'rl_login_',
     windowMs: 15 * 60 * 1000,
     clientOptions: {},
@@ -93,7 +94,7 @@ export const verifyLimiter = rateLimit({
   },
   store: new MongoStore({
     uri: process.env.MONGODB_URI!,
-    collectionName: 'auth',
+    collectionName: 'rateLimits',
     prefix: 'rl_verify_',
     windowMs: 60 * 60 * 1000,
     clientOptions: {},
