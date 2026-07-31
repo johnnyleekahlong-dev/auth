@@ -70,7 +70,7 @@ export const loginLimiter = rateLimit({
   },
   store: new MongoStore({
     uri: process.env.MONGODB_URI!,
-    collectionName: 'rateLimits',
+    collectionName: 'auth',
     prefix: 'rl_login_',
     windowMs: 15 * 60 * 1000,
     clientOptions: {},
@@ -93,7 +93,7 @@ export const verifyLimiter = rateLimit({
   },
   store: new MongoStore({
     uri: process.env.MONGODB_URI!,
-    collectionName: 'rateLimits',
+    collectionName: 'auth',
     prefix: 'rl_verify_',
     windowMs: 60 * 60 * 1000,
     clientOptions: {},
