@@ -111,7 +111,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
       );
     }
 
-    await createSession(req, res, {
+    const csrfToken = await createSession(req, res, {
       _id: user._id!.toString(),
       email: user.email,
       name: user.name,
@@ -119,6 +119,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
+      csrfToken,
       message: 'Account verified successfully',
     });
   } catch (error) {
@@ -171,7 +172,7 @@ export const login = async (
 
     await user?.save();
 
-    await createSession(
+    const csrfToken = await createSession(
       req,
       res,
       {
@@ -187,6 +188,7 @@ export const login = async (
     return res.status(200).json({
       success: true,
       message: 'Logged in successfully',
+      csrfToken,
     });
   } catch (error: any) {
     console.error(error.message);

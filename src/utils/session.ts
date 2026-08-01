@@ -46,7 +46,7 @@ export const createSession = (
   res: Response,
   user: SessionUser,
   remember?: boolean,
-): Promise<void> => {
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     // Regenerate FIRST, before anything else touches the session. This
     // issues a brand-new session ID at the exact moment of privilege
@@ -64,18 +64,22 @@ export const createSession = (
         name: user.name,
       };
 
-      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+      // req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+
+      const csrfToken = crypto.randomBytes(32).toString('hex');
+      req.session.csrfToken = csrfToken;
 
       // Deliberately NOT httpOnly — the frontend needs to read this value
       // to echo it back as a header. It's not a secret the way the session
       // cookie is; its security comes from same-origin JS being the only
       // thing that can read it, not from being hidden from JS entirely.
-      res.cookie('csrf-token', req.session.csrfToken, {
-        httpOnly: false,
-        secure: true,
-        sameSite: 'none',
-        path: '/',
-      });
+
+      // res.cookie('csrf-token', req.session.csrfToken, {
+      //   httpOnly: false,
+      //   secure: true,
+      //   sameSite: 'none',
+      //   path: '/',
+      // });
 
       // Set maxAge AFTER regenerate (regenerate resets cookie options back
       // to the session() middleware's defaults) but BEFORE the one save
@@ -87,7 +91,7 @@ export const createSession = (
 
       req.session.save((err) => {
         if (err) return reject(err);
-        resolve();
+        resolve(csrfToken);
       });
     });
   });
