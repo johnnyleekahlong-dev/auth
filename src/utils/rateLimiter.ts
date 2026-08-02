@@ -35,7 +35,7 @@
 //   duration: 60 * 60,
 // });
 
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import MongoStore from 'mongo-rate-limit-store';
 
 // rate-limit-mongo (the more commonly-suggested package) implements the
@@ -62,7 +62,8 @@ export const loginLimiter = rateLimit({
     const email = String(req.body?.email || '')
       .trim()
       .toLowerCase();
-    return `${req.ip}:${email}`;
+    const ip = ipKeyGenerator(req.ip!);
+    return `${ip}:${email}`;
   },
   message: {
     success: false,
@@ -86,7 +87,7 @@ export const verifyLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip as string,
+  keyGenerator: (req) => ipKeyGenerator(req.ip as string),
   message: {
     success: false,
     message: 'Too many verification attempts. Try again later.',

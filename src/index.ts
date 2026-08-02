@@ -39,17 +39,34 @@ app.options('', cors(corsConfig));
 app.use(cors(corsConfig));
 app.use(express.json());
 app.use(cookieParser());
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET!!,
+//     resave: false,
+//     saveUninitialized: false,
+//     store,
+//     cookie: {
+//       secure: process.env.NODE_ENV === 'production' ? true : false, // Set to true if using HTTPS
+//       maxAge: 3600000, // 1 hour
+//       sameSite: 'none',
+//       path: '/',
+//     },
+//   }),
+// );
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET!!,
+    secret: process.env.SESSION_SECRET!,
     resave: false,
     saveUninitialized: false,
     store,
+
     cookie: {
-      secure: process.env.NODE_ENV === 'production' ? true : false, // Set to true if using HTTPS
-      maxAge: 3600000, // 1 hour
-      sameSite: 'none',
+      secure: false,
+      maxAge: 3600000,
+      sameSite: 'lax',
       path: '/',
+      httpOnly: true,
     },
   }),
 );

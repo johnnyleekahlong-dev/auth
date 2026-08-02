@@ -330,6 +330,7 @@ export const getMe = async (req: Request, res: Response) => {
       '_id name email role',
     );
     if (user) {
+      console.log('reached');
       res.status(200).json({ success: true, user });
       return;
     } else {

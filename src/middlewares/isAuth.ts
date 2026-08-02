@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const isAuth = (req: Request, res: Response, next: NextFunction) => {
+  console.log(req.session);
   if (!req.session.user) {
     return res.status(401).json({ success: false, message: 'Login required' });
   }
