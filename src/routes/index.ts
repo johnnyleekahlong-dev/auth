@@ -7,6 +7,7 @@ import {
   getMe,
   resetPassword,
   forgotPassword,
+  extendSession,
 } from '../controllers/auth';
 import { isAuth } from '../middlewares/isAuth';
 // import { loginRateLimit } from '../middlewares/loginRateLimit';
@@ -21,5 +22,6 @@ router.get('/verify-account/:verificationCode', verifyLimiter, verifyAccount);
 router.get('/get-me', isAuth, getMe);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:resetToken', resetPassword);
+router.post('/extend-session', extendSession);
 
 export default router;

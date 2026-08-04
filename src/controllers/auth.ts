@@ -330,8 +330,15 @@ export const getMe = async (req: Request, res: Response) => {
       '_id name email role',
     );
     if (user) {
-      console.log('reached');
-      res.status(200).json({ success: true, user });
+      res.status(200).json({
+        success: true,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+        expiresAt: req.session.cookie.expires,
+      });
       return;
     } else {
       res.status(401).json({
@@ -344,4 +351,32 @@ export const getMe = async (req: Request, res: Response) => {
     console.error(error.message);
     return res.status(500).json({ success: false, message: 'Server Error' });
   }
+};
+
+// New — explicit extend, only fires when the user clicks "Stay signed in"
+export const extendSession = (req: Request, res: Response) => {
+  if (!req.session.user) {
+    return res
+      .status(401)
+      .json({ success: false, message: 'Not authenticated' });
+  }
+
+  // touch() resets cookie.expires based on the maxAge already set on this
+  // session (from createSession — 1 hour default, or 30 days if remember
+  // was checked at login) — it doesn't need to know which, it just reuses
+  // whatever's already there.
+  req.session.touch();
+
+  req.session.save((err) => {
+    if (err) {
+      console.error('Error extending session:', err);
+      return res
+        .status(500)
+        .json({ success: false, message: 'Could not extend session' });
+    }
+    return res.status(200).json({
+      success: true,
+      expiresAt: req.session.cookie.expires,
+    });
+  });
 };
