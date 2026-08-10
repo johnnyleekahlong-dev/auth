@@ -63,8 +63,8 @@ app.use(
 
     cookie: {
       secure: false,
-      // maxAge: 3600000,
-      maxAge: 5 * 60 * 1000,
+      maxAge: 3600000,
+      // maxAge: 5 * 60 * 1000,
       sameSite: 'lax',
       path: '/',
       httpOnly: true,
