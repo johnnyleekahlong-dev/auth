@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   name: string;
+  role: string;
   email: string;
   password: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -22,6 +23,8 @@ const userSchema = new mongoose.Schema<IUser>(
       required: true,
       unique: true,
     },
+    role: String,
+
     password: String,
     lastLogin: {
       type: Date,

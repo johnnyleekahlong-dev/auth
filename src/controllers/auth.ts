@@ -115,6 +115,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
       _id: user._id!.toString(),
       email: user.email,
       name: user.name,
+      role: user.role,
     });
 
     return res.status(200).json({
@@ -179,6 +180,7 @@ export const login = async (
         _id: user._id!.toString(),
         email: user.email,
         name: user.name,
+        role: user.role,
       },
       remember,
     );
@@ -336,6 +338,7 @@ export const getMe = async (req: Request, res: Response) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
         },
         expiresAt: req.session.cookie.expires,
       });

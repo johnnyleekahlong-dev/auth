@@ -39,6 +39,7 @@ interface SessionUser {
   _id: string;
   email: string;
   name: string;
+  role: string;
 }
 
 export const createSession = (
@@ -62,6 +63,7 @@ export const createSession = (
         id: user._id.toString(),
         email: user.email,
         name: user.name,
+        role: user.role,
       };
 
       // req.session.csrfToken = crypto.randomBytes(32).toString('hex');
