@@ -68,27 +68,33 @@ export const createEventType = async (req: Request, res: Response) => {
         .json({ success: false, message: 'label is required' });
     }
     if (availableFields !== undefined && !Array.isArray(availableFields)) {
-      return res.status(400).json({
-        success: false,
-        message: 'availableFields must be an array of strings',
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'availableFields must be an array of strings',
+        });
     }
     if (
       payloadTemplate !== undefined &&
       !isValidPayloadTemplate(payloadTemplate)
     ) {
-      return res.status(400).json({
-        success: false,
-        message: 'payloadTemplate must be an object of string -> string',
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'payloadTemplate must be an object of string -> string',
+        });
     }
 
     const existing = await EventType.findOne({ key });
     if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: 'An event type with that key already exists',
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'An event type with that key already exists',
+        });
     }
 
     const eventType = await EventType.create({
@@ -138,10 +144,12 @@ export const updateEventType = async (req: Request, res: Response) => {
         });
       }
       if (!Array.isArray(availableFields)) {
-        return res.status(400).json({
-          success: false,
-          message: 'availableFields must be an array of strings',
-        });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: 'availableFields must be an array of strings',
+          });
       }
       eventType.availableFields = availableFields;
     }
@@ -151,14 +159,14 @@ export const updateEventType = async (req: Request, res: Response) => {
         payloadTemplate !== null &&
         !isValidPayloadTemplate(payloadTemplate)
       ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            'payloadTemplate must be an object of string -> string, or null to clear it',
-        });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              'payloadTemplate must be an object of string -> string, or null to clear it',
+          });
       }
-      // null explicitly clears it back to "send full context" default —
-      // Mongoose won't unset a Mixed field from `undefined` alone.
       eventType.payloadTemplate =
         payloadTemplate === null ? undefined : payloadTemplate;
     }
@@ -185,10 +193,12 @@ export const deleteEventType = async (req: Request, res: Response) => {
         .json({ success: false, message: 'Event type not found' });
     }
     if (eventType.isBuiltIn) {
-      return res.status(400).json({
-        success: false,
-        message: 'Built-in event types cannot be deleted',
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: 'Built-in event types cannot be deleted',
+        });
     }
 
     await EventType.deleteOne({ key: eventType.key });

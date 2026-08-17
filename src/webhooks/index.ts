@@ -108,9 +108,7 @@ function applyPayloadTemplate(
 // Fire-and-forget dispatch to every active endpoint subscribed to
 // `eventKey`. Failures are logged (both to WebhookDelivery and console)
 // but never thrown — a broken downstream integration shouldn't block the
-// request that triggered it (login, account creation, etc). `eventKey`
-// is a plain string now, not a fixed union — it just needs to match an
-// EventType.key, built-in or admin-defined.
+// request that triggered it (login, account creation, etc).
 export async function dispatchWebhookEvent(eventKey: string, context: unknown) {
   try {
     const eventType = await EventType.findOne({ key: eventKey });

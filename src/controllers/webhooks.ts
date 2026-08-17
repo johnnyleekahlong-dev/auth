@@ -5,8 +5,7 @@ import WebhookDelivery from '../models/WebhookDelivery';
 import EventType from '../models/EventType';
 import { sendTestWebhook } from '../webhooks';
 
-// Events are no longer a fixed enum — validity means "this key exists in
-// the EventType collection" (built-in or custom, doesn't matter here).
+// Events are valid if the key exists in the EventType collection.
 async function validateEvents(events: unknown): Promise<string[] | null> {
   if (!Array.isArray(events) || events.length === 0) return null;
   if (!events.every((e) => typeof e === 'string')) return null;
@@ -80,8 +79,6 @@ export const createEndpoint = async (req: Request, res: Response) => {
       });
     }
 
-    // Generated once, returned once — from here on it's only ever used
-    // server-side to sign outgoing payloads, same as a user's password.
     const secret = crypto.randomBytes(24).toString('hex');
 
     const endpoint = await WebhookEndpoint.create({
@@ -168,8 +165,6 @@ export const rotateSecret = async (req: Request, res: Response) => {
         .json({ success: false, message: 'Webhook endpoint not found' });
     }
 
-    // Old secret stops working immediately — the receiving end needs
-    // updating with this new one before the next real delivery.
     return res.status(200).json({ success: true, endpoint, secret });
   } catch (error: any) {
     console.error('Error in rotateSecret:', error.message);
