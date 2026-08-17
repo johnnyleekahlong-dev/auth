@@ -2,6 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { dbConnect } from './db';
 import auth from './routes';
+import admin from './routes/admin';
+import webhooks from './routes/webhooks';
+import eventTypes from './routes/eventTypes';
 import cors from 'cors';
 import session from 'express-session';
 import connectMongoDBSession from 'connect-mongodb-session';
@@ -81,6 +84,10 @@ app.get('/', (req, res) => {
 });
 
 app.use('/auth', auth);
+app.use('/admin', admin);
+app.use('/admin/webhooks', webhooks);
+app.use('/admin/event-types', eventTypes);
+
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, () => {
     console.log(`Listening on ${port}`);

@@ -10,7 +10,7 @@ import {
 } from '../nodemailer/template';
 import { createSession } from '../utils/session';
 import { loginLimiter } from '../utils/rateLimiter';
-import { sendUserCreatedWebhook } from '../webhooks';
+import { dispatchWebhookEvent } from '../webhooks';
 
 dotenv.config();
 
@@ -96,10 +96,11 @@ export const verifyAccount = async (req: Request, res: Response) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    await sendUserCreatedWebhook({
+    await dispatchWebhookEvent('user.created', {
       authUserId: user._id!.toString(),
       name: user.name,
       email: user.email,
+      source: 'self-registered',
     });
 
     if (process.env.NODE_ENV !== 'development') {
@@ -172,6 +173,15 @@ export const login = async (
     user.lastLogin = new Date();
 
     await user?.save();
+
+    // Fire-and-forget — doesn't block the response, and a failed delivery
+    // shouldn't fail the login itself.
+    dispatchWebhookEvent('user.login', {
+      authUserId: user._id!.toString(),
+      email: user.email,
+      name: user.name,
+      loginAt: user.lastLogin,
+    });
 
     const csrfToken = await createSession(
       req,
@@ -318,6 +328,12 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.resetPasswordTokenHash = undefined;
     user.resetPasswordExpiresAt = undefined;
     await user.save();
+
+    dispatchWebhookEvent('user.password_reset', {
+      authUserId: user._id!.toString(),
+      email: user.email,
+    });
+
     return res.status(200).json({ success: true, message: 'Password updated' });
   } else {
     return res
@@ -332,6 +348,13 @@ export const getMe = async (req: Request, res: Response) => {
       '_id name email role',
     );
     if (user) {
+      // Keep the session's copy of role in sync with the DB — an admin
+      // could have changed it since this session was created, and
+      // isAdmin reads off the session, not the DB, on every request.
+      if (req.session.user) {
+        req.session.user.role = user.role;
+      }
+
       res.status(200).json({
         success: true,
         user: {
@@ -354,6 +377,22 @@ export const getMe = async (req: Request, res: Response) => {
     console.error(error.message);
     return res.status(500).json({ success: false, message: 'Server Error' });
   }
+};
+
+// GET /auth/csrf-token — the session cookie survives a page reload but the
+// csrfToken doesn't (it's only ever handed back in a login/verify response
+// body, never persisted client-side), so an SPA that reloads needs a way
+// to fetch it again for an already-authenticated session.
+export const getCsrfToken = (req: Request, res: Response) => {
+  if (!req.session.user || !req.session.csrfToken) {
+    return res
+      .status(401)
+      .json({ success: false, message: 'Not authenticated' });
+  }
+
+  return res
+    .status(200)
+    .json({ success: true, csrfToken: req.session.csrfToken });
 };
 
 // New — explicit extend, only fires when the user clicks "Stay signed in"
