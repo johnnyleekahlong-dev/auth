@@ -7,6 +7,7 @@ import {
   welcome,
   resetPassword as reset,
 } from '../nodemailer/template';
+import { dispatchWebhookEvent } from '../webhooks';
 
 // POST /admin/users  { name, email, password, role? }
 // Unlike /auth/register, this is meant for an admin adding someone
@@ -228,6 +229,11 @@ export const deleteUser = async (req: Request, res: Response) => {
         .status(404)
         .json({ success: false, message: 'User not found' });
     }
+
+    await dispatchWebhookEvent('user.deleted', {
+      authUserId: user._id!.toString(),
+      source: 'admin-triggered',
+    });
 
     return res.status(200).json({ success: true, message: 'User deleted' });
   } catch (error: any) {

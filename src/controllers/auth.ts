@@ -329,10 +329,10 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.resetPasswordExpiresAt = undefined;
     await user.save();
 
-    dispatchWebhookEvent('user.password_reset', {
-      authUserId: user._id!.toString(),
-      email: user.email,
-    });
+    // dispatchWebhookEvent('user.password_reset', {
+    //   authUserId: user._id!.toString(),
+    //   email: user.email,
+    // });
 
     return res.status(200).json({ success: true, message: 'Password updated' });
   } else {
