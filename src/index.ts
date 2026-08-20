@@ -77,7 +77,7 @@ app.use(
 
 app.use(csrfProtection);
 
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
   res.json({
     message: 'Authentication System',
   });
