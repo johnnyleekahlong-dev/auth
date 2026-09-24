@@ -6,7 +6,7 @@ import cors from 'cors';
 import session from 'express-session';
 import connectMongoDBSession from 'connect-mongodb-session';
 import cookieParser from 'cookie-parser';
-import { csrfProtection } from './middlewares/csrf';
+// import { csrfProtection } from './middlewares/csrf';
 // import { redisClient } from './utils/redis';
 
 dotenv.config();
@@ -72,7 +72,7 @@ app.use(
   }),
 );
 
-app.use(csrfProtection);
+// app.use(csrfProtection);
 
 app.get('/', (req, res) => {
   res.json({
