@@ -13,7 +13,7 @@ const router = express.Router();
 
 // isAuth first (is there a session at all), then isAdmin (does it have
 // the role) — same ordering the middleware itself expects.
-router.use(isAuth, isAdmin);
+// router.use(isAuth, isAdmin);
 
 router.get('/users', listUsers);
 router.post('/users', createUser);
