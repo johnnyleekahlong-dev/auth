@@ -220,12 +220,12 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
 
     // The CSRF cookie is a separate cookie from the session cookie — clear
     // it too, or a stale token would linger client-side after logout.
-    res.clearCookie('csrf-token', {
-      httpOnly: false,
-      secure: true,
-      sameSite: 'none',
-      path: '/',
-    });
+    // res.clearCookie('csrf-token', {
+    //   httpOnly: false,
+    //   secure: true,
+    //   sameSite: 'none',
+    //   path: '/',
+    // });
 
     // Respond to the client
     return res
